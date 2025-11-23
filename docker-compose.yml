@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  # --- Banco de Dados ---
+  database:
+    image: postgres:15-alpine
+    container_name: np_postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin_password
+      POSTGRES_MULTIPLE_DATABASES: "identity_db,fleet_db,rental_db"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./.docker/postgres-init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - np_network
+
+  # --- Microsserviços ---
+  identity-service:
+    build: ./services/identity-service
+    container_name: np_identity
+    ports:
+      - "3001:3001"
+    environment:
+      - DATABASE_URL=postgresql://admin:admin_password@database:5432/identity_db
+      - PORT=3001
+    depends_on:
+      - database
+    networks:
+      - np_network
+    volumes:
+      - ./services/identity-service:/usr/src/app
+      - /usr/src/app/node_modules
+
+  fleet-service:
+    build: ./services/fleet-service
+    container_name: np_fleet
+    ports:
+      - "3002:3002"
+    environment:
+      - DATABASE_URL=postgresql://admin:admin_password@database:5432/fleet_db
+      - PORT=3002
+    depends_on:
+      - database
+    networks:
+      - np_network
+    volumes:
+      - ./services/fleet-service:/usr/src/app
+      - /usr/src/app/node_modules
+
+  rental-service:
+    build: ./services/rental-service
+    container_name: np_rental
+    ports:
+      - "3003:3003"
+    environment:
+      - DATABASE_URL=postgresql://admin:admin_password@database:5432/rental_db
+      - PORT=3003
+    depends_on:
+      - database
+    networks:
+      - np_network
+    volumes:
+      - ./services/rental-service:/usr/src/app
+      - /usr/src/app/node_modules
+
+  # --- Frontend (Frotas) ---
+  frontend-frotas:
+    build: ./frontend/frontend-frotas
+    container_name: np_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_IDENTITY=http://localhost:3001
+      - REACT_APP_API_FLEET=http://localhost:3002
+      - REACT_APP_API_RENTAL=http://localhost:3003
+    volumes:
+      - ./frontend/frontend-frotas:/usr/src/app
+      - /usr/src/app/node_modules
+    networks:
+      - np_network
+
+networks:
+  np_network:
+    driver: bridge
+
+volumes:
+  postgres_data:

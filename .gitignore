@@ -1,0 +1,16 @@
+# Dependências do Node (nunca enviar pro git)
+node_modules
+dist
+build
+coverage
+
+# Logs e sistema
+*.log
+.DS_Store
+
+# Variáveis de ambiente (segurança)
+.env
+
+# Docker volumes (se houver dados locais mapeados)
+.docker/postgres-init/postgres_data
+postgres_data
