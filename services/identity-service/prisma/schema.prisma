@@ -1,0 +1,66 @@
+// services/identity-service/prisma/schema.prisma
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Pessoa {
+  idString    String   @id @default(uuid())
+  nome        String
+  email       String   @unique
+  telefone    String
+  logradouro  String
+  cidade      String
+  estado      String
+  cep         String
+
+  pessoaFisica   PessoaFisica?
+  pessoaJuridica PessoaJuridica?
+  funcionario    Funcionario?
+
+  @@map("pessoas")
+}
+
+model PessoaFisica {
+  idString        String   @id @default(uuid())
+  cpf             String   @unique
+  rg              String
+  sexo            String
+  dataNascimento  DateTime
+  cnh             String
+
+  pessoaId        String   @unique
+  pessoa          Pessoa   @relation(fields: [pessoaId], references: [idString])
+  
+  @@map("pessoas_fisicas")
+}
+
+model PessoaJuridica {
+  idString      String   @id @default(uuid())
+  cnpj          String   @unique
+  razaoSocial   String
+  nomeFantasia  String
+
+  pessoaId      String   @unique
+  pessoa        Pessoa   @relation(fields: [pessoaId], references: [idString])
+
+  @@map("pessoas_juridicas")
+}
+
+model Funcionario {
+  idString      String   @id @default(uuid())
+  matricula     String   @unique
+  dataAdmissao  DateTime @default(now())
+
+  pessoaId      String   @unique
+  pessoa        Pessoa   @relation(fields: [pessoaId], references: [idString])
+
+  @@map("funcionarios")
+}

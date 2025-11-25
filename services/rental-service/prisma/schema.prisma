@@ -1,0 +1,42 @@
+// services/rental-service/prisma/schema.prisma
+
+generator client {
+  provider      = "prisma-client-js"
+  // REMOVI o "linux-musl" simples. Deixei apenas o específico do Node 18.
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum FormaPagamento {
+  CREDITO
+  DEBITO
+  DINHEIRO
+  PIX
+}
+
+model Locacao {
+  idString        String   @id @default(uuid())
+  
+  dataInicio      DateTime
+  dataFimPrevisto DateTime
+  dataFimReal     DateTime?
+  
+  kmInicial       Float
+  kmFinal         Float?
+  
+  valorTotal      Float?
+  formaPagamento  FormaPagamento
+  
+  // IDs lógicos (sem chave estrangeira real)
+  clienteId       String   
+  veiculoId       String   
+
+  criadoEm        DateTime @default(now())
+  atualizadoEm    DateTime @updatedAt
+
+  @@map("locacoes")
+}

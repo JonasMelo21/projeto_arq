@@ -1,0 +1,43 @@
+generator client {
+  provider      = "prisma-client-js"
+  // Apenas native e a versão específica do OpenSSL 3 (usada pelo Node 18)
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum StatusVeiculo {
+  DISPONIVEL
+  ALUGADO
+  EM_NEGOCIACAO_VENDA
+  VENDIDO
+  MANUTENCAO
+}
+
+model Veiculo {
+  idString       String        @id @default(uuid())
+  
+  // Campos exigidos no PDF (Item 1.3)
+  placa          String        @unique
+  marca          String
+  modelo         String
+  chassi         String        
+  cor            String        
+  combustivel    String        
+  tipoCambio     String        
+  anoFabricacao  Int
+  quilometragem  Float         @default(0.0)
+  
+  status         StatusVeiculo @default(DISPONIVEL)
+
+  // A SOLUÇÃO HÍBRIDA (NoSQL): Lista flexível de acessórios
+  acessorios     Json?         
+  
+  criadoEm       DateTime      @default(now())
+  atualizadoEm   DateTime      @updatedAt
+
+  @@map("veiculos")
+}
