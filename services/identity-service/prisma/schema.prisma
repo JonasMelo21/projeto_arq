@@ -5,62 +5,86 @@ generator client {
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
-
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// 1. Adicionado Enum para fácil controle de acesso no Frontend/Backend
+enum Role {
+  ADMIN
+  FUNCIONARIO
+  CLIENTE
 }
 
 model Pessoa {
   idString    String   @id @default(uuid())
   nome        String
   email       String   @unique
+  
+  // 2. Adicionado campo SENHA (Crítico para Login/Cadastro)
+  senha       String   
+  
+  // 3. Adicionado ROLE para saber se é funcionário ou cliente
+  role        Role     @default(CLIENTE)
+
+  // Dados de Contato e Endereço [cite: 14, 15, 16]
   telefone    String
   logradouro  String
   cidade      String
   estado      String
   cep         String
 
+  // Relacionamentos
   pessoaFisica   PessoaFisica?
   pessoaJuridica PessoaJuridica?
   funcionario    Funcionario?
 
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
   @@map("pessoas")
 }
 
+// Atende Requisito  (PF: nome, sexo, cpf, rg, data nasc, cnh, endereço)
+// Nota: Nome e Endereço vêm da tabela 'Pessoa'
 model PessoaFisica {
-  idString        String   @id @default(uuid())
-  cpf             String   @unique
-  rg              String
-  sexo            String
-  dataNascimento  DateTime
-  cnh             String
+  idString       String   @id @default(uuid())
+  cpf            String   @unique
+  rg             String
+  sexo           String   // Gênero [cite: 14, 15]
+  dataNascimento DateTime
+  cnh            String   // Obrigatório para PF 
 
-  pessoaId        String   @unique
-  pessoa          Pessoa   @relation(fields: [pessoaId], references: [idString])
+  pessoaId       String   @unique
+  pessoa         Pessoa   @relation(fields: [pessoaId], references: [idString], onDelete: Cascade)
   
   @@map("pessoas_fisicas")
 }
 
+// Atende Requisito  (PJ: nome fantasia, razão social, cnpj, endereço)
+// Nota: Endereço vem da tabela 'Pessoa'
 model PessoaJuridica {
-  idString      String   @id @default(uuid())
-  cnpj          String   @unique
-  razaoSocial   String
-  nomeFantasia  String
+  idString     String   @id @default(uuid())
+  cnpj         String   @unique
+  razaoSocial  String
+  nomeFantasia String
 
-  pessoaId      String   @unique
-  pessoa        Pessoa   @relation(fields: [pessoaId], references: [idString])
+  pessoaId     String   @unique
+  pessoa       Pessoa   @relation(fields: [pessoaId], references: [idString], onDelete: Cascade)
 
   @@map("pessoas_juridicas")
 }
 
+// Atende Requisito  (Funcionário: CPF, nome, RG, etc.)
+// ESTRATÉGIA: Um funcionário terá um registro aqui E um registro em 'PessoaFisica' (para ter CPF/RG)
 model Funcionario {
-  idString      String   @id @default(uuid())
-  matricula     String   @unique
-  dataAdmissao  DateTime @default(now())
+  idString     String   @id @default(uuid())
+  matricula    String   @unique
+  dataAdmissao DateTime @default(now())
 
-  pessoaId      String   @unique
-  pessoa        Pessoa   @relation(fields: [pessoaId], references: [idString])
+  pessoaId     String   @unique
+  pessoa       Pessoa   @relation(fields: [pessoaId], references: [idString], onDelete: Cascade)
 
   @@map("funcionarios")
 }
