@@ -32,6 +32,7 @@ const getCarImage = (modelo: string) => {
   if (m.includes('wrangler')) return '/cars/jeep-wrangler.png';
   if (m.includes('elantra')) return '/cars/hyundai-elantra.png';
   if (m.includes('corolla') || m.includes('civic')) return '/cars/toyota-corolla.png';
+  if (m.includes('uno') || m.includes('fiat')) return '/cars/fiat-uno.png'; // <--- ADICIONE ISSO
 
   return null;
 };

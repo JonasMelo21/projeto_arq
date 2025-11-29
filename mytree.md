@@ -13,6 +13,7 @@ projeto_arq                                             //
 │     │  ├─ cars                                        //
 │     │  │  ├─ bmw-5.png                                //
 │     │  │  ├─ chevrolet-spark.png                      //
+│     │  │  ├─ fiat-uno.png                             //
 │     │  │  ├─ ford-transit.png                         //
 │     │  │  ├─ honda-crv.png                            //
 │     │  │  ├─ hyundai-elantra.png                      //
@@ -33,9 +34,12 @@ projeto_arq                                             //
 │     │  ├─ index.tsx                                   //
 │     │  ├─ logo.svg                                    //
 │     │  ├─ pages                                       //
+│     │  │  ├─ AdminDashboard.tsx                       //
 │     │  │  ├─ Booking.tsx                              //
 │     │  │  ├─ Home.tsx                                 //
 │     │  │  ├─ Login.tsx                                //
+│     │  │  ├─ MyRentals.tsx                            //
+│     │  │  ├─ RegisterEmployee.tsx                     //
 │     │  │  ├─ Signup.tsx                               //
 │     │  │  └─ VehicleDetails.tsx                       //
 │     │  ├─ react-app-env.d.ts                          //
@@ -46,6 +50,7 @@ projeto_arq                                             //
 ├─ mytree.md                                            //
 ├─ package-lock.json                                    //
 ├─ package.json                                         //
+├─ seed_db.sh                                           //
 ├─ services                                             //
 │  ├─ fleet-service                                     //
 │  │  ├─ Dockerfile                                     //
@@ -83,6 +88,8 @@ projeto_arq                                             //
 │     │  ├─ migrations                                  //
 │     │  │  ├─ 20251124145725_init_db                   //
 │     │  │  │  └─ migration.sql                         //
+│     │  │  ├─ 20251125222754_add_devolucao             //
+│     │  │  │  └─ migration.sql                         //
 │     │  │  └─ migration_lock.toml                      //
 │     │  └─ schema.prisma                               //
 │     ├─ src                                            //
@@ -90,6 +97,8 @@ projeto_arq                                             //
 │     └─ tsconfig.json                                  //
 ├─ src                                                  //
 │  └─ index.ts                                          //
+├─ start.sh                                             //
+├─ test_selenium.py                                     //
 └─ tsconfig.json                                        //
 
 ```

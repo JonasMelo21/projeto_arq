@@ -29,7 +29,7 @@ app.get('/veiculos/:id', async (req, res) => {
   }
 });
 
-// Criar Veículo (Com suporte a JSONB para acessórios)
+// Criar Veículo
 app.post('/veiculos', async (req, res) => {
   try {
     const { placa, marca, modelo, chassi, cor, combustivel, tipoCambio, anoFabricacao, acessorios } = req.body;
@@ -38,7 +38,6 @@ app.post('/veiculos', async (req, res) => {
       data: {
         placa, marca, modelo, chassi, cor, combustivel, tipoCambio,
         anoFabricacao: Number(anoFabricacao),
-        // Se vier null/undefined, salva array vazio
         acessorios: acessorios || [] 
       }
     });
@@ -49,19 +48,17 @@ app.post('/veiculos', async (req, res) => {
   }
 });
 
-// --- NOVA ROTA: Atualizar Status do Veículo ---
-// Chamada pelo Rental Service quando uma locação é criada ou finalizada
+// --- ROTA DE ATUALIZAÇÃO (Melhorada para aceitar Ano) ---
 app.patch('/veiculos/:id/status', async (req, res) => {
   const { id } = req.params;
-  const { status, kmAtual } = req.body; // Aceita status E nova quilometragem
+  const { status, kmAtual, anoFabricacao } = req.body; // Agora aceita anoFabricacao
 
   try {
-    const data: any = { status };
+    const data: any = {};
     
-    // Se vier KM, atualiza também
-    if (kmAtual !== undefined) {
-      data.quilometragem = Number(kmAtual);
-    }
+    if (status) data.status = status;
+    if (kmAtual !== undefined) data.quilometragem = Number(kmAtual);
+    if (anoFabricacao !== undefined) data.anoFabricacao = Number(anoFabricacao); // Lógica nova
 
     const veiculo = await prisma.veiculo.update({
       where: { idString: id },

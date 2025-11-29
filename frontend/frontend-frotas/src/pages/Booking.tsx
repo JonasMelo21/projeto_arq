@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
-import { Calendar, CheckCircle, ArrowLeft, AlertTriangle } from "lucide-react";
+import { Calendar, CheckCircle, ArrowLeft, AlertTriangle, Car as CarIcon, Gauge } from "lucide-react";
 
 export default function Booking() {
-  const { id } = useParams(); // ID do Veículo
+  const { id } = useParams(); // ID do Veículo vindo da URL
   const navigate = useNavigate();
   
   // Estado
@@ -13,17 +13,32 @@ export default function Booking() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [user, setUser] = useState<any>(null);
+  const [vehicle, setVehicle] = useState<any>(null); // Estado para guardar info do carro
 
-  // Carregar usuário logado ao iniciar
+  // 1. Carregar usuário e dados do carro ao iniciar
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    } else {
-      alert("Você precisa estar logado para alugar!");
-      navigate('/login');
-    }
-  }, [navigate]);
+    const loadData = async () => {
+        // Usuário
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+        } else {
+          alert("Você precisa estar logado para alugar!");
+          navigate('/login');
+          return;
+        }
+
+        // Carro (Para pegar a KM atual)
+        try {
+            const res = await axios.get(`http://localhost:3002/veiculos/${id}`);
+            setVehicle(res.data);
+        } catch (err) {
+            console.error("Erro ao carregar veículo", err);
+            setError("Erro ao carregar dados do veículo. Tente novamente.");
+        }
+    };
+    loadData();
+  }, [id, navigate]);
 
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,14 +51,30 @@ export default function Booking() {
         return;
     }
 
+    if (!vehicle) {
+        setError("Dados do veículo não carregados.");
+        setLoading(false);
+        return;
+    }
+
+    // Validação básica de datas
+    if (new Date(dates.start) >= new Date(dates.end)) {
+        setError("A data de devolução deve ser posterior à retirada.");
+        setLoading(false);
+        return;
+    }
+
     try {
       // Chama o Rental Service
       await axios.post('http://localhost:3003/locacoes', {
-        clienteId: user.idString, // Usa o ID do usuário logado
+        clienteId: user.idString,
         veiculoId: id,
         dataInicio: new Date(dates.start).toISOString(),
         dataFimPrevisto: new Date(dates.end).toISOString(),
-        kmInicial: 0, // Em um sistema real, buscaríamos a KM atual do Fleet Service
+        
+        // CORREÇÃO CRÍTICA: Usa a KM real do carro vinda do Fleet Service
+        kmInicial: Number(vehicle.quilometragem), 
+        
         formaPagamento: payment
       });
 
@@ -52,7 +83,6 @@ export default function Booking() {
       
     } catch (err: any) {
       console.error(err);
-      // Exibe a mensagem de erro vinda do backend (ex: Regra violada)
       if (err.response && err.response.data && err.response.data.error) {
         setError(err.response.data.error);
       } else {
@@ -63,7 +93,7 @@ export default function Booking() {
     }
   };
 
-  if (!user) return null;
+  if (!user || !vehicle) return <div className="p-10 text-center">Carregando reserva...</div>;
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
@@ -72,7 +102,7 @@ export default function Booking() {
         <div className="bg-[#003366] p-6 text-white flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">Confirmar Reserva</h1>
-            <p className="text-blue-200 text-sm">Olá, {user.nome}. Finalize seu aluguel.</p>
+            <p className="text-blue-200 text-sm">Olá, {user.nome}. Você está alugando: {vehicle.modelo}</p>
           </div>
           <Calendar className="w-8 h-8 opacity-50" />
         </div>
@@ -82,11 +112,26 @@ export default function Booking() {
             <ArrowLeft className="w-4 h-4" /> Voltar ao Catálogo
           </Link>
 
+          <div className="bg-blue-50 p-4 rounded-lg mb-6 border border-blue-100 flex items-center justify-between">
+             <div className="flex items-center gap-3">
+                <CarIcon className="text-[#003366]" />
+                <div>
+                    <p className="font-bold text-[#003366]">{vehicle.marca} {vehicle.modelo}</p>
+                    <p className="text-xs text-blue-600">{vehicle.placa}</p>
+                </div>
+             </div>
+             <div className="text-right">
+                <div className="flex items-center gap-1 text-slate-600 text-sm">
+                    <Gauge className="w-4 h-4" />
+                    <span>KM Atual: <strong>{vehicle.quilometragem}</strong></span>
+                </div>
+             </div>
+          </div>
+
           <form onSubmit={handleBooking} className="space-y-6">
             
-            {/* Mensagem de Erro (Regra de Negócio) */}
             {error && (
-                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded flex items-start gap-3">
+                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded flex items-start gap-3 animate-pulse">
                     <AlertTriangle className="text-red-500 h-5 w-5 flex-shrink-0" />
                     <p className="text-red-700 text-sm font-medium">{error}</p>
                 </div>
@@ -133,13 +178,6 @@ export default function Booking() {
                   </button>
                 ))}
               </div>
-            </div>
-
-            {/* Resumo */}
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 text-sm text-gray-600">
-                <p><strong>Veículo ID:</strong> {id}</p>
-                <p><strong>Cliente:</strong> {user.email} ({user.role})</p>
-                <p className="mt-2 text-xs text-gray-400">* Ao confirmar, você concorda com os termos de serviço.</p>
             </div>
 
             <button 

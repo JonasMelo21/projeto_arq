@@ -6,6 +6,9 @@ import Signup from './pages/Signup';
 import VehicleDetails from './pages/VehicleDetails';
 import Booking from './pages/Booking';
 import MyRentals from './pages/MyRentals';
+import AdminDashboard from './pages/AdminDashboard';
+import RegisterEmployee from './pages/RegisterEmployee';
+
 
 function App() {
   return (
@@ -19,6 +22,8 @@ function App() {
         <Route path="/book/:id" element={<Booking />} />
         
         <Route path="/meus-alugueis" element={<MyRentals />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/register-employee" element={<RegisterEmployee />} />
       </Routes>
     </Router>
   );
